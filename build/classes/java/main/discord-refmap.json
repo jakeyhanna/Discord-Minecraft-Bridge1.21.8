@@ -1,0 +1,20 @@
+{
+  "mappings": {
+    "org/discord/discordmaybe/mixin/Player": {
+      "grantCriterion": "Lnet/minecraft/class_2985;method_12878(Lnet/minecraft/class_8779;Ljava/lang/String;)Z"
+    },
+    "org/discord/discordmaybe/mixin/PlayerAdvancementTrackerAccessor": {
+      "owner": "field_13391:Lnet/minecraft/class_3222;"
+    }
+  },
+  "data": {
+    "named:intermediary": {
+      "org/discord/discordmaybe/mixin/Player": {
+        "grantCriterion": "Lnet/minecraft/class_2985;method_12878(Lnet/minecraft/class_8779;Ljava/lang/String;)Z"
+      },
+      "org/discord/discordmaybe/mixin/PlayerAdvancementTrackerAccessor": {
+        "owner": "field_13391:Lnet/minecraft/class_3222;"
+      }
+    }
+  }
+}

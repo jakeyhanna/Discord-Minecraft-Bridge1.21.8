@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "discordmaybe",
+  "version": "${version}",
+  "name": "idk",
+  "description": "Discord bridge",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/discordmaybe/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.discord.discordmaybe.client.DiscordmaybeDataGenerator"
+    ],
+    "main": [
+      "org.discord.discordmaybe.DiscordMaybe"
+    ]
+  },
+  "mixins": [
+    "discordmaybe.mixins.json",
+    {
+      "config": "discordmaybe.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
