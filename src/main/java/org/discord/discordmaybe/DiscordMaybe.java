@@ -1,12 +1,15 @@
 package org.discord.discordmaybe;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.minecraft.advancement.*;
 import net.minecraft.network.packet.s2c.play.AdvancementUpdateS2CPacket;
 import net.minecraft.server.ServerAdvancementLoader;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -22,10 +25,13 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
     private Discordbot bot;
     private MinecraftServer server;
 
+    public static BotConfig config;
     @Override
     public void onInitialize() {
-        String token = "Insert Token here";
-        long channelId = insert channel id here;
+        config = BotConfig.load();
+
+        String token = config.token;
+        long channelId = config.channelId;
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             this.server = server;
@@ -78,7 +84,9 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
                     message.contains("drowned") ||
                     message.contains("burned") ||
                     message.contains("hit") ||
-                    message.contains("withered")){
+                    message.contains("withered") ||
+                    message.contains("shot")||
+                    message.contains("obliterated")){
                 //bot.sendEmbedMessageDiscord(message);
                 bot.sendEmbedDeathDiscord(message,getUUIDfromname(name));
             }
@@ -97,6 +105,12 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
             bot.sendEmbedleaveDiscord(name,Id);
         //    bot.sendToDiscord("**"+name+ " LEFT THE GAME**");
         });
+
+        CommandRegistrationCallback.EVENT.register(((commandDispatcher, commandRegistryAccess, registrationEnvironment) -> {
+            commandDispatcher.register(CommandManager.literal("botsay").then(CommandManager.argument("message", StringArgumentType.greedyString()).executes(context -> {String message = StringArgumentType.getString(context,"message");
+                bot.sendToDiscord(message);
+                return 1;})));
+        }));
     }
 
     public String getUUIDfromname(String playername){
