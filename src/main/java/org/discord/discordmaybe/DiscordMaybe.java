@@ -21,9 +21,19 @@ import java.util.UUID;
 public class DiscordMaybe implements ModInitializer, MessageForwarder {
     public static final Logger LOGGER = LogManager.getLogger("DiscordMaybe");
     private Discordbot bot;
+    private static Discordbot BOT_SINGLETON;
     private MinecraftServer server;
-
+    public static boolean ADVANCEMENTS_FROM_TRACKER = true;
     public static BotConfig config;
+
+    private void setBot(Discordbot b){
+        bot = b;
+        BOT_SINGLETON = b;
+    }
+
+    public static Discordbot getBot() {return BOT_SINGLETON;}
+    //public static MinecraftServer getServerStatic() {return INSTANCE.server}
+
 
     @Override
     public void onInitialize() {
@@ -36,7 +46,9 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
         ServerLifecycleEvents.SERVER_STARTING.register(sv -> {
             this.server = sv;
             try {
+                //bot = new Discordbot(token, channelId, this);
                 bot = new Discordbot(token, channelId, this);
+                setBot(bot);
                 bot.start(); // usually async
                 LOGGER.info("Discord bot starting…");
             } catch (Exception e) {
@@ -58,6 +70,7 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
         ServerLifecycleEvents.SERVER_STOPPING.register(sv -> {
             if (bot != null) {
                 try {
+                    bot.sendEmbedStopserver();
                     bot.stop();
                 } catch (Exception e) {
                     LOGGER.warn("Failed to stop Discord bot", e);
@@ -65,7 +78,7 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
             }
         });
 
-        /*
+
         // ===== Player chat (plain messages) =====
         ServerMessageEvents.CHAT_MESSAGE.register((message, player, params) -> {
             if (bot != null) {
@@ -73,9 +86,9 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
                 bot.sendToDiscord(discordMessage);
             }
         });
-        */
 
-        ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, player, params) ->{
+
+        /*ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, player, params) ->{
             return false;
         });
 
@@ -91,7 +104,7 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
                 bot.sendToDiscord(player.getName().getString() + ": " + raw);
             }
         });
-
+*/
 
         // ===== System messages (advancements + deaths) =====
         // We read the FINAL broadcasted TranslatableText, so this is locale-safe and exact.
@@ -101,7 +114,7 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
             String key = tr.getKey();
 
             // --- Advancements: chat.type.advancement.{task,goal,challenge} ---
-            if (key.startsWith("chat.type.advancement.")) {
+            /*if (key.startsWith("chat.type.advancement.")) {
                 Text playerArg = argAsText(tr.getArgs(), 0); // decorated display name
                 Text titleArg  = argAsText(tr.getArgs(), 1); // localized advancement title
 
@@ -123,7 +136,7 @@ public class DiscordMaybe implements ModInitializer, MessageForwarder {
                     }
                 }
                 return; // handled
-            }
+            }*/
 
             // --- Deaths: death.* (ALL vanilla death messages) ---
             if (key.startsWith("death.")) {

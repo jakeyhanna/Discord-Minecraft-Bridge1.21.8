@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
+import net.minecraft.text.Text;
 
 public class Discordbot extends ListenerAdapter {
     private ShardManager shardManager;
@@ -78,11 +79,12 @@ public class Discordbot extends ListenerAdapter {
         }
     }
 
-    public void sendEmbedTaskDiscord(String message, String id) {
+    public void sendEmbedTaskDiscord(String message, String id, String Desc) {
         if (this.shardManager != null) {
             EmbedBuilder embed = new EmbedBuilder();
             embed.setAuthor(message, (String)null, "https://minotar.net/helm/" + id + "/512.png");
             embed.setColor(Color.GREEN);
+            embed.setDescription(Desc);
             TextChannel channel = this.shardManager.getTextChannelById(this.channelId);
             if (channel != null) {
                 channel.sendMessageEmbeds(embed.build(), new MessageEmbed[0]).queue();
@@ -91,11 +93,12 @@ public class Discordbot extends ListenerAdapter {
         }
     }
 
-    public void sendEmbedCompletedDiscord(String message, String id) {
+    public void sendEmbedCompletedDiscord(String message, String id,String desc) {
         if (this.shardManager != null) {
             EmbedBuilder embed = new EmbedBuilder();
             embed.setAuthor(message, (String)null, "https://minotar.net/helm/" + id + "/512.png");
             embed.setColor(Color.MAGENTA);
+            embed.setDescription(desc);
             TextChannel channel = this.shardManager.getTextChannelById(this.channelId);
             if (channel != null) {
                 channel.sendMessageEmbeds(embed.build(), new MessageEmbed[0]).queue();
