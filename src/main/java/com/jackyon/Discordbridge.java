@@ -30,14 +30,17 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 	private Discordbot bot;
 	private MinecraftServer server;
 	private static Discordbridge INSTANCE;
-
+	private static boolean noChatReportEnabled;
 	public static BotConfig config;
+
 
 	@Override
 	public void onInitialize() {
 
 		INSTANCE = this;
 		config = BotConfig.load();
+
+		noChatReportEnabled = config.noChatReport ==1;
 
 		final String token = config.token;
 		final long channelId = config.channelId;
@@ -91,21 +94,18 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 
 
 		// =========================================================
-		// PLAYER CHAT
-		// =========================================================
-		//
-		// IMPORTANT:
-		//
-		// Returning false from ALLOW_CHAT_MESSAGE prevents:
-		//   1. The normal Minecraft broadcast
-		//   2. The CHAT_MESSAGE event from running
-		//
-		// Therefore we handle everything HERE:
-		//   - cancel original chat
-		//   - broadcast our custom chat message
-		//   - send it to Discord
-		//
-		// =========================================================
+// PLAYER CHAT
+// =========================================================
+//
+// noChatReportEnabled = true:
+//   - cancel normal signed player chat
+//   - rebroadcast as a SYSTEM/SERVER message
+//
+// noChatReportEnabled = false:
+//   - allow normal vanilla player chat
+//
+// Discord forwarding happens in BOTH modes.
+// =========================================================
 
 		ServerMessageEvents.ALLOW_CHAT_MESSAGE.register(
 				(chatMessage, player, boundChatType) -> {
@@ -113,26 +113,14 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 					String playerName =
 							player.getName().getString();
 
-					// Correct way to get the visible message in 26.2.
 					String rawMessage =
 							chatMessage.decoratedContent().getString();
 
-					Component minecraftMessage = Component.literal(
-							"<" + playerName + "> " + rawMessage
-					);
 
-					// Re-broadcast the message manually.
-					MinecraftServer currentServer = this.server;
+					// =================================================
+					// SEND TO DISCORD
+					// =================================================
 
-					if (currentServer != null) {
-						for (ServerPlayer target :
-								currentServer.getPlayerList().getPlayers()) {
-
-							target.sendSystemMessage(minecraftMessage);
-						}
-					}
-
-					// Send message to Discord.
 					if (bot != null) {
 						try {
 							bot.sendToDiscord(
@@ -146,7 +134,48 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 						}
 					}
 
-					// Cancel original Minecraft chat message.
+
+					// =================================================
+					// NORMAL VANILLA CHAT MODE
+					// =================================================
+
+					if (!noChatReportEnabled) {
+
+						/*
+						 * Returning true means:
+						 *
+						 * Let Minecraft broadcast the original
+						 * player chat message normally.
+						 */
+						return true;
+					}
+
+
+					// =================================================
+					// SERVER / SYSTEM CHAT MODE
+					// =================================================
+
+					Component minecraftMessage =
+							Component.literal(
+									"<" + playerName + "> " + rawMessage
+							);
+
+					MinecraftServer currentServer = this.server;
+
+					if (currentServer != null) {
+
+						currentServer
+								.getPlayerList()
+								.broadcastSystemMessage(
+										minecraftMessage,
+										false
+								);
+					}
+
+					/*
+					 * Prevent Minecraft from broadcasting the
+					 * original signed player chat message.
+					 */
 					return false;
 				}
 		);
