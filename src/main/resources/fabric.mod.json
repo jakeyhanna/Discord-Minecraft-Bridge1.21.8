@@ -1,32 +1,38 @@
 {
-  "schemaVersion": 1,
-  "id": "discordmaybe",
-  "version": "${version}",
-  "name": "idk",
-  "description": "Discord bridge",
-  "authors": [],
-  "contact": {},
-  "license": "All-Rights-Reserved",
-  "icon": "assets/discordmaybe/icon.png",
-  "environment": "server",
-  "entrypoints": {
-    "fabric-datagen": [
-      "org.discord.discordmaybe.client.DiscordmaybeDataGenerator"
-    ],
-    "main": [
-      "org.discord.discordmaybe.DiscordMaybe"
-    ]
-  },
-  "mixins": [
-    "discordmaybe.mixins.json",
-    {
-      "config": "discordmaybe.client.mixins.json",
-      "environment": "client"
-    }
-  ],
-  "depends": {
-    "fabricloader": ">=${loader_version}",
-    "fabric": "*",
-    "minecraft": "${minecraft_version}"
-  }
+	"schemaVersion": 1,
+	"id": "discordbridge",
+	"version": "${version}",
+	"name": "discordbridge",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/discordbridge/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.jackyon.Discordbridge"
+		],
+		"client": [
+			"com.jackyon.client.DiscordbridgeClient"
+		]
+	},
+	"mixins": [
+		"discordbridge.mixins.json",
+		{
+			"config": "discordbridge.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
 }
