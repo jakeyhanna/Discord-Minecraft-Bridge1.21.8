@@ -13,12 +13,14 @@ public final class ChatImageRenderer {
 
     /*
      * Increase MAX_WIDTH for more image detail.
+     * Increase MAX_HEIGHT to allow taller portrait images while preserving
+     * their proportions. Square and landscape images remain width-limited.
      *
      * Larger images will occupy more chat space and create
      * significantly larger chat packets.
      */
     private static final int MAX_WIDTH = 28;
-    private static final int MAX_HEIGHT = 16;
+    private static final int MAX_HEIGHT = 24;
 
     /*
      * Minecraft characters are taller than they are wide.

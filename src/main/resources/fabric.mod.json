@@ -2,15 +2,8 @@
 	"schemaVersion": 1,
 	"id": "discordbridge",
 	"version": "${version}",
-	"name": "discordbridge",
-	"description": "This is an example description! Tell everyone what your mod is about!",
-	"authors": [
-		"Me!"
-	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
+	"name": "Discord Bridge",
+	"description": "Bridges Minecraft chat, player events, advancements, and images with Discord.",
 	"license": "CC0-1.0",
 	"icon": "assets/discordbridge/icon.png",
 	"environment": "*",

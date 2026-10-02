@@ -3,6 +3,7 @@ package com.jackyon;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -14,6 +15,10 @@ public interface MessageForwarder {
      * Sends a group of components to Minecraft in the same order.
      */
     void forwardComponentsToMinecraft(List<Component> components);
+
+    default CompletableFuture<String> getOnlinePlayers() {
+        return CompletableFuture.completedFuture("Minecraft server is unavailable.");
+    }
 
     /*
      * Keeps your existing String forwarding code working.

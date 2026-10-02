@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -18,9 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.MinecraftServer;
+import java.util.concurrent.CompletableFuture;
 
 public class Discordbridge implements ModInitializer, MessageForwarder {
 
@@ -29,18 +26,15 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 
 	private Discordbot bot;
 	private MinecraftServer server;
-	private static Discordbridge INSTANCE;
 	private static boolean noChatReportEnabled;
 	public static BotConfig config;
-
 
 	@Override
 	public void onInitialize() {
 
-		INSTANCE = this;
 		config = BotConfig.load();
 
-		noChatReportEnabled = config.noChatReport ==1;
+		noChatReportEnabled = config.noChatReport == 1;
 
 		final String token = config.token;
 		final long channelId = config.channelId;
@@ -53,7 +47,7 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 			this.server = server;
 
 			try {
-				bot = new Discordbot(token, channelId, this);
+				bot = new Discordbot(token, channelId, this, config);
 				bot.start();
 
 				LOGGER.info("Discord bot starting...");
@@ -92,7 +86,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 			this.bot = null;
 		});
 
-
 		// =========================================================
 // PLAYER CHAT
 // =========================================================
@@ -116,7 +109,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 					String rawMessage =
 							chatMessage.decoratedContent().getString();
 
-
 					// =================================================
 					// SEND TO DISCORD
 					// =================================================
@@ -134,7 +126,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 						}
 					}
 
-
 					// =================================================
 					// NORMAL VANILLA CHAT MODE
 					// =================================================
@@ -149,7 +140,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 						 */
 						return true;
 					}
-
 
 					// =================================================
 					// SERVER / SYSTEM CHAT MODE
@@ -180,142 +170,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 				}
 		);
 
-
-		// =========================================================
-		// SYSTEM MESSAGES
-		//
-		// Handles:
-		//   - Advancements
-		//   - Death messages
-		// =========================================================
-/*
-		ServerMessageEvents.GAME_MESSAGE.register(
-				(server, text, overlay) -> {
-
-					if (!(text.getContents()
-							instanceof TranslatableContents translatable)) {
-
-						return;
-					}
-
-					String key = translatable.getKey();
-
-
-					// =================================================
-					// ADVANCEMENTS
-					//
-					// chat.type.advancement.task
-					// chat.type.advancement.goal
-					// chat.type.advancement.challenge
-					// =================================================
-
-					if (key.startsWith("chat.type.advancement.")) {
-
-						Component playerArgument = argAsComponent(
-								translatable.getArgs(),
-								0
-						);
-
-						Component titleArgument = argAsComponent(
-								translatable.getArgs(),
-								1
-						);
-
-						ServerPlayer player =
-								resolvePlayerFromMessageArg(
-										server,
-										playerArgument
-								);
-
-						String cleanName =
-								player != null
-										? player.getName().getString()
-										: playerArgument.getString();
-
-						String uuid =
-								player != null
-										? player.getUUID().toString()
-										: null;
-
-						String advancementTitle =
-								titleArgument.getString();
-
-						if (bot != null) {
-
-							if (key.endsWith(".task")) {
-
-								bot.sendEmbedTaskDiscord(
-										cleanName
-												+ " made the advancement: "
-												+ advancementTitle,
-										uuid
-								);
-
-							} else if (
-									key.endsWith(".goal")
-											|| key.endsWith(".challenge")
-							) {
-
-								bot.sendEmbedCompletedDiscord(
-										cleanName
-												+ " completed: "
-												+ advancementTitle,
-										uuid
-								);
-
-							} else {
-
-								bot.sendEmbedTaskDiscord(
-										cleanName
-												+ " got: "
-												+ advancementTitle,
-										uuid
-								);
-							}
-						}
-
-						return;
-					}
-
-/*
-					// =================================================
-					// DEATH MESSAGES
-					//
-					// Handles all vanilla death.* translations.
-					// =================================================
-
-					if (key.startsWith("death.")) {
-
-						// Exact final text shown by Minecraft.
-						String fullMessage = text.getString();
-
-						Component victimArgument = argAsComponent(
-								translatable.getArgs(),
-								0
-						);
-
-						ServerPlayer victim =
-								resolvePlayerFromMessageArg(
-										server,
-										victimArgument
-								);
-
-						String uuid =
-								victim != null
-										? victim.getUUID().toString()
-										: null;
-
-						if (bot != null) {
-							bot.sendEmbedDeathDiscord(
-									fullMessage,
-									uuid
-							);
-						}
-					}
-				}
-		);
-*/
-
 		// =========================================================
 		// PLAYER JOIN
 		// =========================================================
@@ -331,7 +185,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 			);
 		});
 
-
 		// =========================================================
 		// PLAYER LEAVE
 		// =========================================================
@@ -346,7 +199,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 					player.getUUID().toString()
 			);
 		});
-
 
 		// =========================================================
 		// /botsay <message>
@@ -384,107 +236,9 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 		);
 	}
 
-
 	// =============================================================
 	// HELPERS
 	// =============================================================
-
-	/**
-	 * Safely converts a translation argument into a Component.
-	 */
-	private static Component argAsComponent(
-			Object[] arguments,
-			int index
-	) {
-
-		if (arguments == null
-				|| index < 0
-				|| index >= arguments.length) {
-
-			return Component.empty();
-		}
-
-		Object argument = arguments[index];
-
-		if (argument instanceof Component component) {
-			return component;
-		}
-
-		return Component.literal(String.valueOf(argument));
-	}
-
-
-	/**
-	 * Attempts to find the real ServerPlayer represented by
-	 * a Component used in an advancement or death message.
-	 *
-	 * This works with:
-	 *   - normal usernames
-	 *   - display names
-	 *   - scoreboard/team prefixes and suffixes
-	 */
-	private static ServerPlayer resolvePlayerFromMessageArg(
-			MinecraftServer server,
-			Component playerArgument
-	) {
-
-		String messageName = playerArgument.getString();
-
-
-		// First: compare the fully decorated display name.
-		for (ServerPlayer player :
-				server.getPlayerList().getPlayers()) {
-
-			Component displayName = player.getDisplayName();
-
-			if (displayName != null
-					&& messageName.equals(displayName.getString())) {
-
-				return player;
-			}
-		}
-
-
-		// Second: compare raw usernames.
-		for (ServerPlayer player :
-				server.getPlayerList().getPlayers()) {
-
-			String rawName =
-					player.getName().getString();
-
-			if (messageName.equals(rawName)) {
-				return player;
-			}
-		}
-
-
-		// Third: fallback for decorated names such as:
-		//
-		// [Admin] Jack
-		// ★ Jack
-		// Jack [Team]
-		//
-		ServerPlayer bestMatch = null;
-		int longestName = -1;
-
-		for (ServerPlayer player :
-				server.getPlayerList().getPlayers()) {
-
-			String rawName =
-					player.getName().getString();
-
-			if ((messageName.contains(rawName)
-					|| messageName.endsWith(rawName))
-					&& rawName.length() > longestName) {
-
-				bestMatch = player;
-				longestName = rawName.length();
-			}
-		}
-
-		return bestMatch;
-	}
-
 
 	/**
 	 * Finds the UUID of an ONLINE player by name.
@@ -516,43 +270,6 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 		return null;
 	}
 
-
-	// =============================================================
-	// DISCORD -> MINECRAFT
-	// =============================================================
-/*
-	@Override
-	public void forwardToMinecraft(String message) {
-
-		MinecraftServer currentServer = this.server;
-
-		if (currentServer == null
-				|| message == null
-				|| message.isBlank()) {
-
-			return;
-		}
-
-		/*
-		 * Discord callbacks normally happen on the Discord bot's
-		 * thread, not Minecraft's server thread.
-		 *
-		 * Schedule the Minecraft work safely on the server thread.
-		 */
-	/*
-		currentServer.execute(() -> {
-
-			Component minecraftMessage =
-					Component.literal(message);
-
-			for (ServerPlayer player :
-					currentServer.getPlayerList().getPlayers()) {
-
-				player.sendSystemMessage(minecraftMessage);
-			}
-		});
-	}
-	*/
 	@Override
 	public void forwardComponentsToMinecraft(
 			List<Component> components
@@ -578,5 +295,29 @@ public class Discordbridge implements ModInitializer, MessageForwarder {
 						);
 			}
 		});
+	}
+
+	@Override
+	public CompletableFuture<String> getOnlinePlayers() {
+		MinecraftServer currentServer = this.server;
+		if (currentServer == null) {
+			return MessageForwarder.super.getOnlinePlayers();
+		}
+		CompletableFuture<String> result =
+				new CompletableFuture<>();
+		currentServer.execute(() -> {
+			try {
+				List<String> names = currentServer.getPlayerList().getPlayers()
+						.stream().map(player -> player.getName().getString())
+						.sorted(String.CASE_INSENSITIVE_ORDER).toList();
+				String heading = "Online players: " + names.size() + "/"
+						+ currentServer.getPlayerList().getMaxPlayers();
+				result.complete(heading + "\n" + (names.isEmpty()
+						? "Nobody is online right now." : String.join(", ", names)));
+			} catch (Exception exception) {
+				result.completeExceptionally(exception);
+			}
+		});
+		return result;
 	}
 }
